@@ -43,9 +43,12 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
                                                         //That generates a single sine wave voice.
         
         /**Select a random midi note using the Random class and shifting the lowest possible note by 4 octaves */
-        auto midiNote = juce::Random::getSystemRandom().nextDouble() * 36.0 + 48.0;
+        //auto midiNote = (int)(juce::Random::getSystemRandom().nextDouble() * 36.0 + 60.0);
+        auto midiNote = singleOsc->chordGenerator();
         /**In order to calculate the freq of that midi note, we use the formula from the A440 and knowing it is 69 note: 440 * 2 ^ (d / 12) */
         auto freq = 440.0 * pow(2.0, (midiNote - 69.0) / 12.0);
+        
+        std::cout << "Midi: " << midiNote << " freq: " << freq << '\n';
         /**We set the frequency of the oscillator by passing the freq and sample rate as arguments and add the osc to the array of oscillators */
         singleOsc->setFrequency((float)freq, (float)sampleRate);
         oscillators.add(singleOsc);

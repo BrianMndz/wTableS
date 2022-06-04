@@ -50,6 +50,8 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
+    
+    int chordGenerator();
 
 private:
     float angleDelta = 0.0f;
