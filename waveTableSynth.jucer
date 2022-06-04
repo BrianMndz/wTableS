@@ -4,6 +4,10 @@
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
   <MAINGROUP id="qkz3QH" name="waveTableSynth">
     <GROUP id="{5E1C2223-BEF1-F11C-9CDF-4A699590C7EB}" name="Source">
+      <FILE id="W8k1YQ" name="SineOscillator.cpp" compile="1" resource="0"
+            file="Source/SineOscillator.cpp"/>
+      <FILE id="HTo4wP" name="SineOscillator.h" compile="0" resource="0"
+            file="Source/SineOscillator.h"/>
       <FILE id="kQjpEg" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="zcv9Gn" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
       <FILE id="gN7V6U" name="MainComponent.cpp" compile="1" resource="0"
