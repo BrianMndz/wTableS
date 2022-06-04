@@ -3,8 +3,11 @@
 //==============================================================================
 MainComponent::MainComponent()
 {
-    // Make sure you set the size of the component after
-    // you add any child components.
+    cpuUsageLabel.setText ("CPU Usage", juce::dontSendNotification);
+    cpuUsageText.setJustificationType(juce::Justification::right);
+    addAndMakeVisible(cpuUsageLabel);
+    addAndMakeVisible(cpuUsageText);
+    
     setSize (800, 600);
 
     // Some platforms require permissions to open input channels so request that here
@@ -19,6 +22,7 @@ MainComponent::MainComponent()
         // Specify the number of input and output channels that we want to open
         setAudioChannels (2, 2);
     }
+    startTimer(50);
 }
 
 MainComponent::~MainComponent()
@@ -30,46 +34,65 @@ MainComponent::~MainComponent()
 //==============================================================================
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
-    // This function will be called when the audio device is started, or when
-    // its settings (i.e. sample rate, block size, etc) are changed.
-
-    // You can use this function to initialise any resources you might need,
-    // but be careful - it will be called on the audio thread, not the GUI thread.
-
-    // For more details, see the help for AudioProcessor::prepareToPlay()
+   /**We have to initialize the oscillators and set their frequencies to play based on the sample rate. */
+    auto numberOfOsc = 200;         //Large number of oscillators to evaluate the CPU load of such a number
+    
+    for(auto i = 0; i < numberOfOsc; i++)
+    {
+        auto * singleOsc = new SineOscillator();        //For each oscillator we instantiate a new SineOscillator object
+                                                        //That generates a single sine wave voice.
+        
+        /**Select a random midi note using the Random class and shifting the lowest possible note by 4 octaves */
+        auto midiNote = juce::Random::getSystemRandom().nextDouble() * 36.0 + 48.0;
+        /**In order to calculate the freq of that midi note, we use the formula from the A440 and knowing it is 69 note: 440 * 2 ^ (d / 12) */
+        auto freq = 440.0 * pow(2.0, (midiNote - 69.0) / 12.0);
+        /**We set the frequency of the oscillator by passing the freq and sample rate as arguments and add the osc to the array of oscillators */
+        singleOsc->setFrequency((float)freq, (float)sampleRate);
+        oscillators.add(singleOsc);
+    }
+    
+    /**We define the output level by dividing a quien gain level by the number of osc to prevent clip in the sum of signals */
+    mainLevel = 0.25f / (float)numberOfOsc;
 }
 
 void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill)
 {
-    // Your audio-processing code goes here!
-
-    // For more details, see the help for AudioProcessor::getNextAudioBlock()
-
-    // Right now we are not producing any data, in which case we need to clear the buffer
-    // (to prevent the output of random noise)
+    auto* leftBuffer = bufferToFill.buffer->getWritePointer (0, bufferToFill.startSample);
+    auto* rightBuffer = bufferToFill.buffer->getWritePointer (1, bufferToFill.startSample);
+    
     bufferToFill.clearActiveBufferRegion();
+    
+    for(auto oscillatorIndex = 0; oscillatorIndex < oscillators.size(); ++oscillatorIndex)
+    {
+        /**We retrieve  a pointer  to the oscillator instance */
+        auto* localOsc = oscillators.getUnchecked(oscillatorIndex);
+        
+        for(auto sample = 0; sample < bufferToFill.numSamples; ++sample)
+        {
+            /**For each sample in the audio sample buffer we get the sine wave sample and trim the gain */
+            auto levelSample = localOsc->getNextSample() * mainLevel;
+            
+            leftBuffer[sample] += levelSample;
+            rightBuffer[sample] += levelSample;
+        }
+    }
 }
 
 void MainComponent::releaseResources()
 {
-    // This will be called when the audio device stops, or when it is being
-    // restarted due to a setting change.
 
-    // For more details, see the help for AudioProcessor::releaseResources()
 }
 
 //==============================================================================
 void MainComponent::paint (juce::Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
+    
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 
-    // You can add your drawing code here!
 }
 
 void MainComponent::resized()
 {
-    // This is called when the MainContentComponent is resized.
-    // If you add any child components, this is where you should
-    // update their positions.
+    cpuUsageLabel.setBounds (10, 10, getWidth() - 20, 20);
+    cpuUsageText .setBounds (10, 10, getWidth() - 20, 20);
 }
