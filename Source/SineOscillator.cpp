@@ -53,12 +53,13 @@ void SineOscillator::resized()
 int SineOscillator::chordGenerator()
 {
     /**Midi notes of a Cmaj7 chord in 4 octaves */
-    int chordNotes[16] = {60, 64, 67, 71,
+    int chordNotes[20] = {48, 52, 55, 59,
+                          60, 64, 67, 71,
                           72, 76, 79, 83,
                           84, 88, 91, 95,
                           96, 100,103,107};
     
-    auto midiNote = (int)(juce::Random::getSystemRandom().nextDouble() * 16.0);
+    auto midiNote = (int)(juce::Random::getSystemRandom().nextDouble() * 20.0);
     
     return chordNotes[midiNote];
 }
