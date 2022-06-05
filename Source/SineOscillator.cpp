@@ -14,8 +14,6 @@
 //==============================================================================
 SineOscillator::SineOscillator()
 {
-    // In your constructor, you should add any child components, and
-    // initialise any special settings that your component needs.
 
 }
 
@@ -25,13 +23,6 @@ SineOscillator::~SineOscillator()
 
 void SineOscillator::paint (juce::Graphics& g)
 {
-    /* This demo code just fills the component's background and
-       draws some placeholder text to get you started.
-
-       You should replace everything in this method with your own
-       drawing code..
-    */
-
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
 
     g.setColour (juce::Colours::grey);
@@ -62,4 +53,21 @@ int SineOscillator::chordGenerator()
     auto midiNote = (int)(juce::Random::getSystemRandom().nextDouble() * 20.0);
     
     return chordNotes[midiNote];
+}
+
+void SineOscillator::createWaveTable()
+{
+    sineTable.setSize(1, (int) tableSize);
+    /**Initialize the AudioSampleBuffer by calling setSize and we only need 1 chonles and retrieve the write pointer for that single channel buffer*/
+    auto* samples = sineTable.getWritePointer(0);
+    /**calculate the angle delta but now using  the table size between the full 2pi cycle by 127*/
+    auto angleDelta = juce::MathConstants<double>::twoPi / (double)(tableSize - 1);
+    auto currentAngle = 0.0;
+    
+    for(unsigned int i = 0; i < tableSize; ++i)
+    {
+        auto sample = std::sin(currentAngle);
+        samples[i] = (float)sample;
+        currentAngle += angleDelta;
+    }
 }

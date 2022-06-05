@@ -8,6 +8,9 @@ MainComponent::MainComponent()
     addAndMakeVisible(cpuUsageLabel);
     addAndMakeVisible(cpuUsageText);
     
+    //Create the wavetable
+    singleSine.createWaveTable();
+    
     setSize (800, 600);
 
     // Some platforms require permissions to open input channels so request that here
@@ -35,16 +38,17 @@ MainComponent::~MainComponent()
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
    /**We have to initialize the oscillators and set their frequencies to play based on the sample rate. */
-    auto numberOfOsc = 200;         //Large number of oscillators to evaluate the CPU load of such a number
+    auto numberOfOsc = 100;         //Large number of oscillators to evaluate the CPU load of such a number
     
     for(auto i = 0; i < numberOfOsc; i++)
     {
-        auto * singleOsc = new SineOscillator();        //For each oscillator we instantiate a new SineOscillator object
-                                                        //That generates a single sine wave voice.
+        /** For each oscillator we instantiate a new SineOscillator object. We call the custom constructor */
+        //auto * singleOsc = new SineOscillator();
+        auto * singleOsc = new WaveTableOscillator(singleSine.sineTable);
         
         /**Select a random midi note using the Random class and shifting the lowest possible note by 4 octaves */
         //auto midiNote = (int)(juce::Random::getSystemRandom().nextDouble() * 36.0 + 60.0);
-        auto midiNote = singleOsc->chordGenerator();
+        auto midiNote = singleSine.chordGenerator();
         /**In order to calculate the freq of that midi note, we use the formula from the A440 and knowing it is 69 note: 440 * 2 ^ (d / 12) */
         auto freq = 440.0 * pow(2.0, (midiNote - 69.0) / 12.0);
         

@@ -40,8 +40,11 @@ private:
     /**Array designed for holding objects.
      Holds a list of pointer to objects and will automatically delete the objects when they are removed from the array.
      ow.add(myObj)   after adding objects, they are "owned" by the array. */
-    juce::OwnedArray<SineOscillator> oscillators;
+    //juce::OwnedArray<SineOscillator> oscillators;
+    juce::OwnedArray<WaveTableOscillator> oscillators;
 
+    /**This object is created to be able to create the wavetable declared in the SineOsc class */
+    SineOscillator singleSine;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

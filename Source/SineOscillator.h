@@ -19,6 +19,7 @@ class SineOscillator  : public juce::Component
 {
 public:
     SineOscillator();
+    
     ~SineOscillator() override;
     
     /** Allows us to calculate the angle delta by first dividing the frequency by the sample rate.
@@ -52,9 +53,60 @@ public:
     void resized() override;
     
     int chordGenerator();
+    
+    /**Function that will be called in the mainComponent before the audio processing */
+    void createWaveTable();
+    
+    /**Variable to hold the wavetable values of single sine wave cycle */
+    const unsigned int tableSize = 1 << 7;      //Mamalord: bitshift to represent 128...
+    juce::AudioSampleBuffer sineTable;
 
 private:
     float angleDelta = 0.0f;
     float currentAngle = 0.0f;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SineOscillator)
+};
+
+class WaveTableOscillator
+{
+public:
+    WaveTableOscillator(const juce::AudioSampleBuffer& wavetableToUse) : wavetable(wavetableToUse)
+    {
+        jassert(wavetable.getNumChannels() == 1);
+    }
+    
+    /**Instead of keeping track of the current angle and the angle delta, define two member variables that store the current wavetable index*/
+    void setFrequency(float frequency, float sampleRate)
+    {
+        auto tableSizeOverSampleRate = (float)wavetable.getNumSamples() / sampleRate;
+        tableDelta = frequency * tableSizeOverSampleRate;
+    }
+    
+    forcedinline float getNextSample() noexcept
+    {
+        auto tableSize = (unsigned int) wavetable.getNumSamples();
+        /**TEmporary store the to indices of wt surrounding the sample value to retrieve. If higher index goes beyond the size, wrap the value to the start. */
+        auto index0 = (unsigned int) currentIndex;
+        auto index1 = index0 == (tableSize - 1) ? (unsigned int) 0 : index0 + 1;
+        /**CAlculate the interpolation value as fraction between two indices */
+        auto fracc = currentIndex - (float)index0;
+        /**Get a pointer to the audio sample and read the values at the two indices and store temporary*/
+        auto* table = wavetable.getReadPointer(0);
+        auto value0 = table[index0];
+        auto value1 = table[index1];
+        /**The interpolated sample value can then be retrieved by using the standard interpolation formula*/
+        auto currentSample = value0 + fracc * (value1 - value0);
+        
+        /**Increment the angle delta of the table and wrap the value around if the value exceed*/
+        if( (currentIndex += tableDelta) > (float)tableSize )
+            currentIndex -= (float)tableSize;
+        
+        return currentSample;
+    }
+    
+private:
+    float tableDelta = 0.0f;
+    float currentIndex = 0.0f;
+    const juce::AudioSampleBuffer& wavetable;
+
 };
